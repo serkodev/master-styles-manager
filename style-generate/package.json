@@ -1,0 +1,9 @@
+{
+  "name": "@master/style",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "@master-style-original@npm:@master/style": "^1.2.0"
+  }
+}
