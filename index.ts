@@ -4,6 +4,17 @@ import * as path from 'path';
 
 import Shorthand from './shorthand';
 
+type fileImport = {
+    file: string,
+    exports: { [key: string]: typeof Style}
+}
+
+type fileStyle = {
+    file: string,
+    export: string,
+    style: typeof Style
+}
+
 (async () => {
     const td = './styles/src';
     const files = fs.readdirSync(td)
@@ -11,11 +22,27 @@ import Shorthand from './shorthand';
         // .filter(file => ['animation.ts', 'spacing.ts'].indexOf(file) !== -1) // debug
         .map(file => './' + path.join(td, file.slice(0, -3)));
 
-    const imports: Array<{ [key: string]: typeof Style}>  = await Promise.all(files.map(item => import(item)));
-    const styles = imports.reduce((all, exports) => {
-        const exportStyles = Object.values(exports).filter(style => typeof style.match == 'function');
-        return all.concat(...exportStyles);
-    }, [] as Array<typeof Style>);
+    // load and import all styles
+    const imports: fileImport[] = await Promise.all(files.map(async item => {
+        return {
+            file: item,
+            exports: await import(item)
+        };
+    }));
+
+    // build styles list with export name and file
+    const styles = imports.reduce((all, fileImport) => {
+        for (const [exp, style] of Object.entries(fileImport.exports)) {
+            if (typeof style.match === 'function') {
+                all.push({
+                    file: fileImport.file,
+                    export: exp,
+                    style: style
+                });
+            }
+        }
+        return all;
+    }, [] as fileStyle[]);
 
     const shorthandSet = {};
     styles.forEach(style => {
