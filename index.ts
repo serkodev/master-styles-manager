@@ -1,5 +1,7 @@
+import { Style } from '@master/style';
 import * as fs from 'fs';
 import * as path from 'path';
+
 import Shorthand from './shorthand';
 
 (async () => {
@@ -9,16 +11,15 @@ import Shorthand from './shorthand';
         // .filter(file => ['animation.ts', 'spacing.ts'].indexOf(file) !== -1) // debug
         .map(file => './' + path.join(td, file.slice(0, -3)));
 
-    const imports = await Promise.all(files.map(item => import(item)));
+    const imports: Array<{ [key: string]: typeof Style}>  = await Promise.all(files.map(item => import(item)));
     const styles = imports.reduce((all, exports) => {
-        const exportStyles = Object.values<unknown>(exports).filter(style => typeof style['match'] == 'function');
+        const exportStyles = Object.values(exports).filter(style => typeof style.match == 'function');
         return all.concat(...exportStyles);
-    }, []);
+    }, [] as Array<typeof Style>);
 
     const shorthands = styles.reduce((all, style) => {
         Shorthand(style).forEach(sh => all[sh] = true); // filter same
         return all;
     }, {});
-
     Object.keys(shorthands).forEach(s => console.log(s));
 })();

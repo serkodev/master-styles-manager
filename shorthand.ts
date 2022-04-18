@@ -1,5 +1,6 @@
 import genex from 'genex';
 import bcd from '@mdn/browser-compat-data';
+import { Style } from '@master/style';
 
 const filterProps = [
     '$'
@@ -14,7 +15,7 @@ const filterProps = [
 
 const filterMap = {...filterProps.map(k => ({ [k]: true }))};
 
-export default (style): string[] => {
+export default (style: typeof Style): string[] => {
     const properties = [];
 
     if (style.matches) { //continue;
