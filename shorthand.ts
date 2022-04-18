@@ -1,52 +1,45 @@
 import genex from 'genex';
 import bcd from '@mdn/browser-compat-data';
 
-export class ShorthandList {
+// Order:
+// this.semantics;
+// this.matches;
+// this.colorStarts;
+// this.symbol;
+// this.key;
 
-    // Order:
-    // this.semantics;
-    // this.matches;
-    // this.colorStarts;
-    // this.symbol;
-    // this.key;
-    async parse (file) {
-        const exports = await import(file);
-        const shorthands = {};
+const filters = ['$'];
 
-        for (const exp in exports) {
-            const style = exports[exp];
-            if (typeof style.match != 'function') continue;
+export default (style): string[] => {
+    const properties = [];
 
-            const properties = [];
+    if (style.matches) { //continue;
 
-            if (style.matches) { //continue;
+        let matchesRegex = (<RegExp>style.matches).source;
 
-                let matchesRegex = (<RegExp>style.matches).source;
+        // replace wildcard (.) regex for generate
+        matchesRegex = matchesRegex.replace(/(?<!\\)\.[\*\+]?\??/g, '');
 
-                // replace wildcard (.) regex for generate
-                matchesRegex = matchesRegex.replace(/(?<!\\)\.[\*\+]?\??/g, '');
+        const genProps = genex(new RegExp(matchesRegex)).generate()
+            .map(result => result.split(':')[0]);
 
-                const genProps = genex(new RegExp(matchesRegex)).generate()
-                    .map(result => result.split(':')[0]);
-
-                properties.push(...genProps);
-            }
-
-            if (style.key) {
-                properties.push(style.key);
-            }
-
-            properties
-                .filter((item, pos) => properties.indexOf(item) == pos ) // filter repeate
-                .filter(item => item != '$' ) // TODO
-                .map(item => item.endsWith('(') ? item+')' : item) // normalize () props
-                .filter(item => !bcd.css.properties[item] && !bcd.svg.attributes.presentation[item]) // filter shorthands
-                .forEach(item => {
-                    shorthands[item] = true;
-                });
-        }
-
-        Object.keys(shorthands).length &&
-        console.log(Object.keys(shorthands));
+        properties.push(...genProps);
     }
-}
+
+    if (style.key) {
+        properties.push(style.key);
+    }
+
+    return properties
+        .filter((item, pos) =>
+            // filter repeate
+            properties.indexOf(item) == pos &&
+            filters.indexOf(item) === -1 &&
+            (
+                // filter shorthands
+                !bcd.css.properties[item] &&
+                !bcd.svg.attributes.presentation[item]
+            )
+        )
+        .map(item => item.endsWith('(') ? item+')' : item); // normalize () props
+};
