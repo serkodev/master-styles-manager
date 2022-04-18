@@ -1,6 +1,10 @@
 import genex from 'genex';
 import bcd from '@mdn/browser-compat-data';
 
+const filterProps = [
+    '$'
+];
+
 // Order:
 // this.semantics;
 // this.matches;
@@ -8,7 +12,7 @@ import bcd from '@mdn/browser-compat-data';
 // this.symbol;
 // this.key;
 
-const filters = ['$'];
+const filterMap = {...filterProps.map(k => ({ [k]: true }))};
 
 export default (style): string[] => {
     const properties = [];
@@ -34,7 +38,7 @@ export default (style): string[] => {
         .filter((item, pos) =>
             // filter repeate
             properties.indexOf(item) == pos &&
-            filters.indexOf(item) === -1 &&
+            !filterMap[item] &&
             (
                 // filter shorthands
                 !bcd.css.properties[item] &&
