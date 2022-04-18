@@ -9,7 +9,7 @@ type fileImport = {
     exports: { [key: string]: typeof Style}
 }
 
-type fileStyle = {
+type exportStyle = {
     file: string,
     export: string,
     style: typeof Style
@@ -31,7 +31,7 @@ type fileStyle = {
     }));
 
     // build styles list with export name and file
-    const styles = imports.reduce((all, fileImport) => {
+    const exportStyles = imports.reduce((all, fileImport) => {
         for (const [exp, style] of Object.entries(fileImport.exports)) {
             if (typeof style.match === 'function') {
                 all.push({
@@ -42,11 +42,19 @@ type fileStyle = {
             }
         }
         return all;
-    }, [] as fileStyle[]);
+    }, [] as exportStyle[]);
 
     const shorthandSet = {};
-    styles.forEach(style => {
-        Shorthand(style).forEach(sh => shorthandSet[sh] = true); // filter same
+    exportStyles.forEach(exportStyle => {
+        Shorthand(exportStyle.style).forEach(name => shorthandSet[name] = true); // filter same
     });
     console.dir(Object.keys(shorthandSet), {'maxArrayLength': null});
+
+    const sets = {};
+    exportStyles.forEach(style => {
+        if (style.style.key && style.style.matches) {
+            sets[style.file] = true;
+        }
+    });
+    console.dir(Object.keys(sets), {'maxArrayLength': null});
 })();
