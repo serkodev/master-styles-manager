@@ -17,9 +17,9 @@ import Shorthand from './shorthand';
         return all.concat(...exportStyles);
     }, [] as Array<typeof Style>);
 
-    const shorthands = styles.reduce((all, style) => {
-        Shorthand(style).forEach(sh => all[sh] = true); // filter same
-        return all;
-    }, {});
-    Object.keys(shorthands).forEach(s => console.log(s));
+    const shorthandSet = {};
+    styles.forEach(style => {
+        Shorthand(style).forEach(sh => shorthandSet[sh] = true); // filter same
+    });
+    console.dir(Object.keys(shorthandSet), {'maxArrayLength': null});
 })();
