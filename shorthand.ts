@@ -13,7 +13,7 @@ const filterProps = [
 // this.symbol;
 // this.key;
 
-const filterMap = {...filterProps.map(k => ({ [k]: true }))};
+const filterMap = filterProps.reduce((acc,curr)=> (acc[curr]=true,acc),{});
 
 export default (style: typeof Style): string[] => {
     const properties = [];
