@@ -3,7 +3,7 @@ import bcd from '@mdn/browser-compat-data';
 import { Style } from '@master/style';
 
 const filterProps = [
-    '$'
+    '$' // variable
 ];
 
 // Order:
@@ -26,8 +26,8 @@ export default (style: typeof Style): string[] => {
         matchesRegex = matchesRegex.replace(/(?<!\\)\.[\*\+]?\??/g, '');
 
         const genProps = genex(new RegExp(matchesRegex)).generate()
-            .map(result => result.split(':')[0]);
-
+            .map(result => result.split(':')[0])
+            .filter(item => !filterMap[item]);
         properties.push(...genProps);
     }
 
@@ -36,15 +36,10 @@ export default (style: typeof Style): string[] => {
     }
 
     return properties
-        .filter((item, pos) =>
-            // filter repeate
-            properties.indexOf(item) == pos &&
-            !filterMap[item] &&
-            (
-                // filter shorthands
-                !bcd.css.properties[item] &&
-                !bcd.svg.attributes.presentation[item]
-            )
+        .filter(item =>
+            // filter shorthands
+            !bcd.css.properties[item] &&
+            !bcd.svg.attributes.presentation[item]
         )
         .map(item => item.endsWith('(') ? item+')' : item); // normalize () props
 };
