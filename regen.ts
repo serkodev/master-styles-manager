@@ -13,6 +13,5 @@ export default (regex: RegExp) => {
     matchesRegex = matchesRegex.replace(/(?<!\\)\.[\*\+]?\??/g, '');
 
     return genex(new RegExp(matchesRegex)).generate()
-        .map(result => result.split(':')[0])
-        .filter(item => !filterMap[item]);
+        .filter(item => !filterMap[item.split(':')[0]]);
 };

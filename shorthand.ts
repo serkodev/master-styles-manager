@@ -13,7 +13,9 @@ export default (style: typeof Style): string[] => {
     const properties = [];
 
     if (style.matches) {
-        properties.push(...regen(style.matches));
+        const props = regen(style.matches)
+            .map(result => result.split(':')[0]);
+        properties.push(...props);
     }
 
     if (style.key) {
