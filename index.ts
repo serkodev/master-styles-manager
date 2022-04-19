@@ -15,6 +15,8 @@ type exportStyle = {
     style: typeof Style
 }
 
+const args = process.argv.slice(2);
+
 (async () => {
     const td = './styles/src';
     const files = fs.readdirSync(td)
@@ -44,11 +46,13 @@ type exportStyle = {
         return all;
     }, [] as exportStyle[]);
 
-    const shorthandSet = {};
-    exportStyles.forEach(exportStyle => {
-        Shorthand(exportStyle.style).forEach(name => shorthandSet[name] = true); // filter same
-    });
-    console.dir(Object.keys(shorthandSet), {'maxArrayLength': null});
+    if (args[0] == '-s') {
+        const shorthandSet = {};
+        exportStyles.forEach(exportStyle => {
+            Shorthand(exportStyle.style).forEach(name => shorthandSet[name] = true); // filter same
+        });
+        console.dir(Object.keys(shorthandSet), {'maxArrayLength': null});
+    }
 
     const sets = {};
     exportStyles.forEach(style => {
