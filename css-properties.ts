@@ -1,6 +1,5 @@
 import 'css.escape';
 import { Style } from '@master/style';
-import { Variable } from './styles/src/variable';
 import { MdnCompat, flatAlternativeNameResult } from 'mdn-compat-browserlist';
 import bcd from '@mdn/browser-compat-data';
 
@@ -91,7 +90,7 @@ class CSSMapper {
 export const cssMapper = new CSSMapper();
 
 export default (style: typeof Style): string[] => {
-    if (style == Variable) {
+    if (style.id == 'variable') {
         // special handle
         return;
     }
