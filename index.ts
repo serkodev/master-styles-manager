@@ -1,7 +1,7 @@
 import { Styles } from '@master/styles';
 
 import Shorthand from './shorthand';
-import CSSProperties, { cssMapper } from './css-properties';
+import CSSProperties from './css-properties';
 
 const args = process.argv.slice(2);
 
@@ -14,10 +14,9 @@ if (args[0] == '-s') {
 }
 
 if (args[0] == '-c') {
+    const cssProperty = new CSSProperties();
     Styles
         // .filter(style => style.key == 'overflow') // debug
-        .forEach(style => {
-            CSSProperties(style);
-        });
-    console.dir(cssMapper.mapper, {maxArrayLength: null, depth: null});
+        .forEach(style => { cssProperty.process(style); });
+    console.dir(cssProperty.mapper, {maxArrayLength: null, depth: null});
 }

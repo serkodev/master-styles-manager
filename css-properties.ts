@@ -2,13 +2,13 @@ import 'css.escape';
 import { Style } from '@master/style';
 import { MdnCompat, flatAlternativeNameResult } from 'mdn-compat-browserlist';
 import bcd from '@mdn/browser-compat-data';
-
 import regen from './regen';
+
 const WILDCARD = '�';
 
-type ValEquals = boolean | string | { [key:string]: string }
+export type ValEquals = boolean | string | { [key:string]: string }
 
-type ValCondition = {
+export type ValCondition = {
     // equals:
     //  boolean (all vals equal or not)
     //  string: all vals equal string
@@ -19,16 +19,19 @@ type ValCondition = {
     style: string
 }
 
-class CSSMapper {
-    compat: MdnCompat;
-    mapper: {[key: string]: {
-        related?: { [key: string]: {
+export default class CSSProperties {
+    readonly mapper: {
+        [key: string]: {
+            related?: { [key: string]: {
+                vals?: ValCondition[],
+                prop?: string
+            }},
             vals?: ValCondition[],
-            prop?: string
-        }},
-        vals?: ValCondition[],
-        prop?: string;
-    }} = {};
+            prop?: string;
+        }
+    } = {};
+
+    private compat: MdnCompat;
 
     constructor() {
         this.compat = new MdnCompat();
@@ -59,7 +62,7 @@ class CSSMapper {
         // return properties.filter(prop => { altProps[prop] && console.log('filtered', prop); return !altProps[prop]; });
     }
 
-    register(properties: string[], style: string, equals?: ValEquals) {
+    private register(properties: string[], style: string, equals?: ValEquals) {
         let sortedProps = [...properties].sort();
         sortedProps = this.filterAltProps(sortedProps);
 
@@ -98,78 +101,75 @@ class CSSMapper {
             upsert(relatedMap);
         }
     }
-}
 
-export const cssMapper = new CSSMapper();
-
-export default (style: typeof Style): string[] => {
-    if (style.id == 'variable') {
-        // special handle
-        return;
-    }
-
-    if (style.key) {
-        cssMapper.register([ style.key ], style.key);
-        return [ style.key ];
-    }
-
-    // generate all possible samples from matches (regex)
-    const samples = regen(style.matches);
-
-    for (const s of samples) {
-        let sample = s;
-        let wildcards = sample.split(' ').length - 1;
-
-        if (wildcards > 1) {
-            console.warn('[WARNING] more then 1 wildcard:', style.id);
-            continue;
+    process(style: typeof Style) {
+        if (style.id == 'variable') {
+            // special handle
+            return;
         }
 
-        // fill wildcard
-        if (wildcards === 1) {
-            sample = sample.replace(' ', WILDCARD);
-        }
-        if (sample.endsWith(':')) {
-            wildcards++;
-            sample = sample + WILDCARD;
+        if (style.key) {
+            this.register([ style.key ], style.key);
+            return;
         }
 
-        const matches = style.match(sample);
-        if (!matches) throw 'not matches sample';
+        // generate all possible samples from matches (regex)
+        const samples = regen(style.matches);
 
-        const b = new style(sample, matches);
-        if (!b.props) throw 'no props and key';
-        if (b.value == undefined) throw 'undefined value';
-        if (b.unit == undefined) throw 'undefined unit';
+        for (const s of samples) {
+            let sample = s;
+            let wildcards = sample.split(' ').length - 1;
 
-        const cssProps = Object.keys(b.props);
-
-        const thisProps = cssProps.filter(prop => b.props[prop] == b);
-        if (thisProps.length == cssProps.length) {
-            // all same value
-            if (wildcards) {
-                cssMapper.register(cssProps, b.name);
-            } else {
-                cssMapper.register(cssProps, b.name, b.value+b.unit);
+            if (wildcards > 1) {
+                console.warn('[WARNING] more then 1 wildcard:', style.id);
+                continue;
             }
-        } else {
-            // contains hardcode value
-            switch (style.id) {
-                case 'fontSmoothing': {
-                    cssProps.forEach(prop => {
-                        cssMapper.register([prop], b.name, b.props[prop].value + b.props[prop].unit);
-                    });
+
+            // fill wildcard
+            if (wildcards === 1) {
+                sample = sample.replace(' ', WILDCARD);
+            }
+            if (sample.endsWith(':')) {
+                wildcards++;
+                sample = sample + WILDCARD;
+            }
+
+            const matches = style.match(sample);
+            if (!matches) throw 'not matches sample';
+
+            const b = new style(sample, matches);
+            if (!b.props) throw 'no props and key';
+            if (b.value == undefined) throw 'undefined value';
+            if (b.unit == undefined) throw 'undefined unit';
+
+            const cssProps = Object.keys(b.props);
+
+            const thisProps = cssProps.filter(prop => b.props[prop] == b);
+            if (thisProps.length == cssProps.length) {
+                // all same value
+                if (wildcards) {
+                    this.register(cssProps, b.name);
+                } else {
+                    this.register(cssProps, b.name, b.value+b.unit);
                 }
-                    break;
-                case 'lines':
-                case 'textSize':
-                    // ignore knowns styles
-                    break;
-                default:
-                    console.warn('[WARNING] ignored style:', style.id || style);
-                    continue;
+            } else {
+                // contains hardcode value
+                switch (style.id) {
+                    case 'fontSmoothing': {
+                        cssProps.forEach(prop => {
+                            this.register([prop], b.name, b.props[prop].value + b.props[prop].unit);
+                        });
+                    }
+                        break;
+                    case 'lines':
+                    case 'textSize':
+                        // ignore knowns styles
+                        break;
+                    default:
+                        console.warn('[WARNING] ignored style:', style.id || style);
+                        continue;
+                }
             }
         }
     }
-    return [];
-};
+}
