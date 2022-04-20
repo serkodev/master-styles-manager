@@ -7,18 +7,20 @@ import regen from './regen';
 const WILDCARD = '�';
 
 type ValEquals = boolean | string | { [key:string]: string }
+
 type ValCondition = {
     // equals:
     //  boolean (all vals equal or not)
     //  string: all vals equal string
     //  kv: every properties (key) in map are equal to its value
-    equals: ValEquals,
+    eq: ValEquals,
 
     // if mathed all equals then return cls
     style: string
 }
 
 class CSSMapper {
+    compat: MdnCompat;
     mapper: {[key: string]: {
         related?: { [key: string]: {
             vals?: ValCondition[],
@@ -27,48 +29,61 @@ class CSSMapper {
         vals?: ValCondition[],
         prop?: string;
     }} = {};
-    compat: MdnCompat;
 
     constructor() {
         this.compat = new MdnCompat();
     }
 
-    propPrefixes = ['-webkit-', '-moz-'];
+    // filter all prefixed property (should not use this filter, currently fix for some)
+    // private isPrefixedProperty(prop: string, properties: string[]): boolean {
+    //     const propPrefixes = ['-webkit-', '-moz-'];
+    //     return properties.every(eProp => {
+    //         for (const prefix of propPrefixes) {
+    //             if (prefix + eProp == prop) return false;
+    //         }
+    //         return true;
+    //     });
+    // }
 
-    private filterAlternativeProps(properties: string[]): string[] {
-        const alternativeProps = properties.reduce((all, prop) => {
-            flatAlternativeNameResult(this.compat.alternative(bcd.css.properties[prop])).forEach(name => {
-                all[name] = true;
-            });
+    // filter prefixed property in properties
+    private filterAltProps(properties: string[]): string[] {
+        const altProps = properties.reduce((all, prop) => {
+            const ident = bcd.css.properties[prop];
+            if (ident) {
+                flatAlternativeNameResult(this.compat.alternative(ident))
+                    .forEach(name => { all[name] = true; });
+            }
             return all;
         }, {});
-        return properties.filter(prop => !alternativeProps[prop]);
-
-        // FIXME: filter all prefixed property (should not use this filter, currently fix for some)
-        // .filter(prop =>
-        //     properties.every(eProp => {
-        //         for (const prefix of this.propPrefixes) {
-        //             if (prefix + eProp == prop) return false;
-        //         }
-        //         return true;
-        //     })
-        // )
+        return properties.filter(prop => !altProps[prop]);
+        // return properties.filter(prop => { altProps[prop] && console.log('filtered', prop); return !altProps[prop]; });
     }
 
-    register(properties: string[], style: string, ...equals: ValEquals[]) {
-        const sortedProps = [...properties].sort();
-        // sortedProps = this.filterAlternativeProps(sortedProps);
-        // console.log(sortedProps);
+    register(properties: string[], style: string, equals?: ValEquals) {
+        let sortedProps = [...properties].sort();
+        sortedProps = this.filterAltProps(sortedProps);
 
         const prop = style.split(':')[0];
         const mainProperty = sortedProps[0];
         const cssMap = this.mapper[mainProperty] || (this.mapper[mainProperty] = {});
 
         const upsert = (map) => {
-            if (equals && equals.length > 0) {
-                const vals = map.vals || (map.vals = []);
-                vals.push({ equals, style });
+            if (equals) {
+                const vals: ValCondition[] = map.vals || (map.vals = []);
+
+                // find excits equals
+                const equalsJSON = JSON.stringify(equals);
+                const excitsEqualVal = vals.find(val => JSON.stringify(val.eq) == equalsJSON);
+                if (excitsEqualVal !== undefined) {
+                    // pick the shortest style
+                    if (style.length < excitsEqualVal.style.length) {
+                        excitsEqualVal.style = style;
+                    }
+                } else {
+                    vals.push({ eq: equals, style });
+                }
             }
+
             // pick the shortest
             if (!map.prop || prop.length < map.prop.length )
                 map.prop = prop;
@@ -82,8 +97,6 @@ class CSSMapper {
             const relatedMap = related[relatedPropsKey] || (cssMap.related[relatedPropsKey] = {});
             upsert(relatedMap);
         }
-
-        // TODO: optimize for prefix (--webkit-)
     }
 }
 
@@ -95,14 +108,22 @@ export default (style: typeof Style): string[] => {
         return;
     }
 
-    if (style.key) return [ style.key ];
+    if (style.key) {
+        cssMapper.register([ style.key ], style.key);
+        return [ style.key ];
+    }
 
     // generate all possible samples from matches (regex)
     const samples = regen(style.matches);
 
-    samples.forEach(sample => {
+    for (const s of samples) {
+        let sample = s;
         let wildcards = sample.split(' ').length - 1;
-        if (wildcards > 1) throw 'more then 1 wildcard';
+
+        if (wildcards > 1) {
+            console.warn('[WARNING] more then 1 wildcard:', style.id);
+            continue;
+        }
 
         // fill wildcard
         if (wildcards === 1) {
@@ -117,45 +138,38 @@ export default (style: typeof Style): string[] => {
         if (!matches) throw 'not matches sample';
 
         const b = new style(sample, matches);
-        if (b.props) {
-            if (b.value == undefined) throw 'undefined value';
-            if (b.unit == undefined) throw 'undefined unit';
+        if (!b.props) throw 'no props and key';
+        if (b.value == undefined) throw 'undefined value';
+        if (b.unit == undefined) throw 'undefined unit';
 
-            const cssProps = Object.keys(b.props);
+        const cssProps = Object.keys(b.props);
 
-            const thisProps = cssProps.filter(prop => b.props[prop] == b);
-            if (thisProps.length == cssProps.length) { // all same value
-                if (wildcards) {
-                    cssMapper.register(cssProps, b.name);
-                } else {
-                    cssMapper.register(cssProps, b.name, b.value+b.unit);
-                }
+        const thisProps = cssProps.filter(prop => b.props[prop] == b);
+        if (thisProps.length == cssProps.length) {
+            // all same value
+            if (wildcards) {
+                cssMapper.register(cssProps, b.name);
             } else {
-                console.log(sample, thisProps, cssProps);
-
-                if (wildcards) {
-                    // TODO
-                } else if (thisProps.length == 0) {
-                    // all static props value
-                    const equals = cssProps
-                        .map((prop): ValEquals => {
-                            return { [prop]: b.props[prop].value + b.props[prop].unit };
-                        });
-                    cssMapper.register(cssProps, b.name, ...equals);
-                }
-
-                // TODO
-                // console.log('external vales style', b.props, b.value);
+                cssMapper.register(cssProps, b.name, b.value+b.unit);
             }
         } else {
-            throw 'no props and key';
+            // contains hardcode value
+            switch (style.id) {
+                case 'fontSmoothing': {
+                    cssProps.forEach(prop => {
+                        cssMapper.register([prop], b.name, b.props[prop].value + b.props[prop].unit);
+                    });
+                }
+                    break;
+                case 'lines':
+                case 'textSize':
+                    // ignore knowns styles
+                    break;
+                default:
+                    console.warn('[WARNING] ignored style:', style.id || style);
+                    continue;
+            }
         }
-    });
-
-    // console.log(cssMapper.mapper['border-style']);
-
+    }
     return [];
 };
-
-// cssProperties(BackdropFilterStyle);
-// cssProperties(SpacingStyle);

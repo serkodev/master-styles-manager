@@ -2,14 +2,12 @@ import bcd from '@mdn/browser-compat-data';
 import { Style } from '@master/style';
 import regen from './regen';
 
-// Order:
-// semantics;
-// matches;
-// colorStarts;
-// symbol;
-// key;
-
 export default (style: typeof Style): string[] => {
+    if (style.id == 'variable') {
+        // special handle
+        return [];
+    }
+
     const properties = [];
 
     if (style.matches) {
