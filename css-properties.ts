@@ -28,11 +28,18 @@ export interface PriMapMeta extends MapMeta {
 
 export type Mapper = { [key: string]: PriMapMeta }
 
+export type Options = {
+    warning?: boolean
+}
+
 export default class CSSProperties {
     readonly mapper: Mapper;
     private compat: MdnCompat;
+    private options: Options = {};
 
-    constructor() {
+    constructor(options?: Options) {
+        if (options)
+            this.options = options;
         this.mapper = {};
         this.compat = new MdnCompat();
     }
@@ -121,7 +128,7 @@ export default class CSSProperties {
             let wildcards = sample.split(' ').length - 1;
 
             if (wildcards > 1) {
-                console.warn('[WARNING] more then 1 wildcard:', style.id);
+                this.options.warning && console.warn('[WARNING] more then 1 wildcard:', style.id);
                 continue;
             }
 
@@ -166,7 +173,7 @@ export default class CSSProperties {
                         // ignore knowns styles
                         break;
                     default:
-                        console.warn('[WARNING] ignored style:', style.id || style);
+                        this.options.warning && console.warn('[WARNING] ignored style:', style.id || style);
                         continue;
                 }
             }
