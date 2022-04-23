@@ -85,6 +85,10 @@ export default class CSSProperties {
             return;
         }
 
+        if (style.key) {
+            this.register([ style.key ], style.key);
+        }
+
         // generate all possible samples from matches (regex)
         const samples = style.matches ? regen(style.matches) : [];
 
@@ -106,56 +110,53 @@ export default class CSSProperties {
                 sample = sample + WILDCARD;
             }
 
+            // matches
             const matches = style.match(sample);
             if (!matches) throw 'not matches sample';
 
             const s = new style(sample, matches);
 
-            const { value, unit } = s;
-            const props = s.props;
-            if (!props) {
-                if (style.key) {
-                    this.register([ style.key ], s.name);
-                    continue;
-                } else {
-                    throw 'undefined value';
-                }
+            const { props, value, unit } = s;
+
+            if (style.key) {
+                // key: for choose the short one
+                this.register([ style.key ], s.name);
             }
-            if (value == undefined) throw 'undefined value';
-            if (unit == undefined) throw 'undefined unit';
 
-            const cssProps = Object.keys(props);
+            if (props) {
+                // props
+                if (value == undefined) throw 'undefined value';
+                if (unit == undefined) throw 'undefined unit';
 
-            const thisProps = cssProps.filter(prop => props[prop] == s);
-            if (thisProps.length == cssProps.length) {
+                const cssProps = Object.keys(props);
+
+                const thisProps = cssProps.filter(prop => props[prop] == s);
+                if (thisProps.length == cssProps.length) {
                 // all same value
-                if (wildcards) {
-                    this.register(cssProps, s.name);
-                } else {
-                    this.register(cssProps, s.name, value+unit);
-                }
-            } else {
-                // contains hardcode value
-                switch (style.id) {
-                    case 'fontSmoothing': {
-                        cssProps.forEach(prop => {
-                            this.register([prop], s.name, props[prop].value + props[prop].unit);
-                        });
+                    if (wildcards) {
+                        this.register(cssProps, s.name);
+                    } else {
+                        this.register(cssProps, s.name, value+unit);
                     }
-                        break;
-                    case 'lines':
-                    case 'textSize':
+                } else {
+                // contains hardcode value
+                    switch (style.id) {
+                        case 'fontSmoothing': {
+                            cssProps.forEach(prop => {
+                                this.register([prop], s.name, props[prop].value + props[prop].unit);
+                            });
+                        }
+                            break;
+                        case 'lines':
+                        case 'textSize':
                         // ignore knowns styles
-                        break;
-                    default:
-                        this.options.warning && console.warn('[WARNING] ignored style:', style.id || style);
-                        continue;
+                            break;
+                        default:
+                            this.options.warning && console.warn('[WARNING] ignored style:', style.id || style);
+                            continue;
+                    }
                 }
             }
-        }
-
-        if (style.key) {
-            this.register([ style.key ], style.key);
         }
     }
 }
