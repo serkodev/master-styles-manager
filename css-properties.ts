@@ -6,14 +6,12 @@ import regen from './regen';
 
 const WILDCARD = '�';
 
-export type ValEquals = boolean | string | { [key:string]: string }
-
 export type ValCondition = {
     // equals:
     //  boolean (all vals equal or not)
     //  string: all vals equal string
     //  kv: every properties (key) in map are equal to its value
-    eq: ValEquals,
+    eq: string,
 
     // if mathed all equals then return cls
     style: string
@@ -64,7 +62,7 @@ export default class CSSProperties {
         // return properties.filter(prop => { altProps[prop] && console.log('filtered', prop); return !altProps[prop]; });
     }
 
-    private register(properties: string[], style: string, equals?: ValEquals) {
+    private register(properties: string[], style: string, equals?: string) {
         let sortedProps = [...properties].sort();
         sortedProps = this.filterAltProps(sortedProps);
 
