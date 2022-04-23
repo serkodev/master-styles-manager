@@ -64,7 +64,7 @@ export default class CSSProperties {
                     .forEach(name => { all[name] = true; });
             }
             return all;
-        }, {});
+        }, <{[key: string]: true}>{});
         return properties.filter(prop => !altProps[prop]);
         // return properties.filter(prop => { altProps[prop] && console.log('filtered', prop); return !altProps[prop]; });
     }
@@ -77,7 +77,7 @@ export default class CSSProperties {
         const mainProperty = sortedProps[0];
         const cssMap = this.mapper[mainProperty] || (this.mapper[mainProperty] = {});
 
-        const upsert = (map) => {
+        const upsert = (map: MapMeta) => {
             if (equals) {
                 const vals: ValCondition[] = map.vals || (map.vals = []);
 
@@ -123,8 +123,8 @@ export default class CSSProperties {
         // generate all possible samples from matches (regex)
         const samples = regen(style.matches);
 
-        for (const s of samples) {
-            let sample = s;
+        for (const _sample of samples) {
+            let sample = _sample;
             let wildcards = sample.split(' ').length - 1;
 
             if (wildcards > 1) {
@@ -144,27 +144,29 @@ export default class CSSProperties {
             const matches = style.match(sample);
             if (!matches) throw 'not matches sample';
 
-            const b = new style(sample, matches);
-            if (!b.props) throw 'no props and key';
-            if (b.value == undefined) throw 'undefined value';
-            if (b.unit == undefined) throw 'undefined unit';
+            const s = new style(sample, matches);
 
-            const cssProps = Object.keys(b.props);
+            const { props, value, unit } = s;
+            if (!props) throw 'no props and key';
+            if (value == undefined) throw 'undefined value';
+            if (unit == undefined) throw 'undefined unit';
 
-            const thisProps = cssProps.filter(prop => b.props[prop] == b);
+            const cssProps = Object.keys(props);
+
+            const thisProps = cssProps.filter(prop => props[prop] == s);
             if (thisProps.length == cssProps.length) {
                 // all same value
                 if (wildcards) {
-                    this.register(cssProps, b.name);
+                    this.register(cssProps, s.name);
                 } else {
-                    this.register(cssProps, b.name, b.value+b.unit);
+                    this.register(cssProps, s.name, value+unit);
                 }
             } else {
                 // contains hardcode value
                 switch (style.id) {
                     case 'fontSmoothing': {
                         cssProps.forEach(prop => {
-                            this.register([prop], b.name, b.props[prop].value + b.props[prop].unit);
+                            this.register([prop], s.name, props[prop].value + props[prop].unit);
                         });
                     }
                         break;

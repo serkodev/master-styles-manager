@@ -7,7 +7,7 @@ import CSSProperties from './css-properties';
 const args = process.argv.slice(2);
 
 if (args[0] == '-s') {
-    const shorthandSet = {};
+    const shorthandSet = <{[key: string]: true}>{};
     Styles.forEach(style => {
         Shorthand(style).forEach(name => shorthandSet[name] = true); // filter same
     });
