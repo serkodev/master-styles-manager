@@ -1,7 +1,5 @@
 import 'css.escape';
 import { Style } from '@master/style';
-import { MdnCompat, flatAlternativeNameResult } from 'mdn-compat-browserlist';
-import bcd from '@mdn/browser-compat-data';
 import regen from './regen';
 
 const WILDCARD = '�';
@@ -34,44 +32,16 @@ export type Options = {
 
 export default class CSSProperties {
     readonly mapper: Mapper;
-    private compat: MdnCompat;
     private options: Options = {};
 
     constructor(options?: Options) {
         if (options)
             this.options = options;
         this.mapper = {};
-        this.compat = new MdnCompat();
-    }
-
-    // filter all prefixed property (should not use this filter, currently fix for some)
-    // private isPrefixedProperty(prop: string, properties: string[]): boolean {
-    //     const propPrefixes = ['-webkit-', '-moz-'];
-    //     return properties.every(eProp => {
-    //         for (const prefix of propPrefixes) {
-    //             if (prefix + eProp == prop) return false;
-    //         }
-    //         return true;
-    //     });
-    // }
-
-    // filter prefixed property in properties
-    private filterAltProps(properties: string[]): string[] {
-        const altProps = properties.reduce((all, prop) => {
-            const ident = bcd.css.properties[prop];
-            if (ident) {
-                flatAlternativeNameResult(this.compat.alternative(ident))
-                    .forEach(name => { all[name] = true; });
-            }
-            return all;
-        }, <{[key: string]: true}>{});
-        return properties.filter(prop => !altProps[prop]);
-        // return properties.filter(prop => { altProps[prop] && console.log('filtered', prop); return !altProps[prop]; });
     }
 
     private register(properties: string[], style: string, equals?: string) {
-        let sortedProps = [...properties].sort();
-        sortedProps = this.filterAltProps(sortedProps);
+        const sortedProps = [...properties].sort();
 
         const prop = style.split(':')[0];
         const mainProperty = sortedProps[0];
