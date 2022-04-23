@@ -85,13 +85,8 @@ export default class CSSProperties {
             return;
         }
 
-        if (style.key) {
-            this.register([ style.key ], style.key);
-            return;
-        }
-
         // generate all possible samples from matches (regex)
-        const samples = regen(style.matches);
+        const samples = style.matches ? regen(style.matches) : [];
 
         for (const _sample of samples) {
             let sample = _sample;
@@ -116,8 +111,16 @@ export default class CSSProperties {
 
             const s = new style(sample, matches);
 
-            const { props, value, unit } = s;
-            if (!props) throw 'no props and key';
+            const { value, unit } = s;
+            const props = s.props;
+            if (!props) {
+                if (style.key) {
+                    this.register([ style.key ], s.name);
+                    continue;
+                } else {
+                    throw 'undefined value';
+                }
+            }
             if (value == undefined) throw 'undefined value';
             if (unit == undefined) throw 'undefined unit';
 
@@ -149,6 +152,10 @@ export default class CSSProperties {
                         continue;
                 }
             }
+        }
+
+        if (style.key) {
+            this.register([ style.key ], style.key);
         }
     }
 }
