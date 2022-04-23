@@ -19,21 +19,23 @@ export type ValCondition = {
     style: string
 }
 
-export default class CSSProperties {
-    readonly mapper: {
-        [key: string]: {
-            related?: { [key: string]: {
-                vals?: ValCondition[],
-                prop?: string
-            }},
-            vals?: ValCondition[],
-            prop?: string;
-        }
-    } = {};
+export interface MapMeta {
+    vals?: ValCondition[],
+    prop?: string;
+}
 
+export interface PriMapMeta extends MapMeta {
+    related?: { [key: string]: MapMeta }
+}
+
+export type Mapper = { [key: string]: PriMapMeta }
+
+export default class CSSProperties {
+    readonly mapper: Mapper;
     private compat: MdnCompat;
 
     constructor() {
+        this.mapper = {};
         this.compat = new MdnCompat();
     }
 
