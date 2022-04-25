@@ -2,6 +2,12 @@
   "name": "master-styles-manager",
   "version": "0.0.1",
   "license": "MIT",
+  "author": "SerKo (https://github.com/serkodev)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serkodev/master-styles-manager.git"
+  },
+  "homepage": "https://github.com/serkodev/master-styles-manager",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
