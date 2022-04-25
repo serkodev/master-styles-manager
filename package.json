@@ -1,6 +1,6 @@
 {
   "name": "master-styles-manager",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "pkgroll",
-    "build:css": "ts-node index.ts -c -o dist/css.json"
+    "prepublishOnly": "pnpm build"
   },
   "files": [
     "dist/**/*"
