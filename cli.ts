@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import 'css.escape'; // polyfill
 import { Styles } from '@master/styles';
 import Shorthand from './shorthand';
-import CSSProperties from './css-properties';
+import { CSSProperties } from './src/css-properties';
 
 const args = process.argv.slice(2);
 

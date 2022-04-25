@@ -2,7 +2,18 @@
   "name": "master-styles-manager",
   "version": "1.0.0",
   "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
+    "build": "pkgroll",
     "build:css": "ts-node index.ts -c -o dist/css.json"
   },
   "files": [
@@ -14,6 +25,7 @@
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
     "eslint": "^8.13.0",
+    "pkgroll": "^1.0.4",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3"
   },

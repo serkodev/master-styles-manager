@@ -1,4 +1,3 @@
-import 'css.escape';
 import { Style } from '@master/style';
 import regen from './regen';
 
@@ -30,7 +29,7 @@ export type Options = {
     warning?: boolean
 }
 
-export default class CSSProperties {
+export class CSSProperties {
     readonly mapper: Mapper;
     private options: Options = {};
 
