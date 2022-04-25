@@ -29,8 +29,8 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "@master/style": "^1.3.5",
-    "@master/styles": "^1.8.0",
+    "@master/style": "^1.4.4",
+    "@master/styles": "^1.9.2",
     "@mdn/browser-compat-data": "^4.1.17",
     "css.escape": "^1.5.1",
     "genex": "^1.1.0",
