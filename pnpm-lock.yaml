@@ -16,6 +16,7 @@ specifiers:
   typescript: ^4.6.3
 
 dependencies:
+  '@master/style': 1.4.3
   '@master/styles': 1.9.2_@master+style@1.4.3
   '@mdn/browser-compat-data': 4.1.17
   css.escape: 1.5.1
@@ -23,7 +24,6 @@ dependencies:
   mdn-compat-browserlist: 0.0.5
 
 devDependencies:
-  '@master/style': 1.4.3
   '@types/node': 17.0.25
   '@typescript-eslint/eslint-plugin': 5.20.0_qhyndj2pafgujuttxulbfsc73e
   '@typescript-eslint/parser': 5.20.0_5wsz2tb7zzudmaqxfve53vbauu
@@ -80,7 +80,7 @@ packages:
 
   /@master/style/1.4.3:
     resolution: {integrity: sha512-fDXywvqyQ4O0Pex9SFwVycAE3hxkf9cGGCsUzmT8NP8QCQWFZPJizBzbzCrPi+jTfzlCHBXlkKN3Cdw7nyKfkw==}
-    dev: true
+    dev: false
 
   /@master/styles/1.9.2_@master+style@1.4.3:
     resolution: {integrity: sha512-VHVfDnTpeDkJOjsl1zXJfUFlpbaB7hFgKx992AC+bspx2KEJgMiaTmomfmt3T4xO9aH1VS2w6oWPHjI9/S68lg==}
